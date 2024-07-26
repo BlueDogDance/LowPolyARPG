@@ -47,7 +47,7 @@ public class OneHandedWeaponScript : MonoBehaviour
         if (previousAnimation == "Armature_One Handed Swing Right" || previousAnimation == "Armature_One Handed Swing Left" && currentAnimation != "Armature_One Handed Swing Left" && currentAnimation != "Armature_One Handed Swing Right")
         {
             canSwing = true;
-        }0
+        }
 
         if (Input.GetMouseButton(0) && (currentAnimation == "Armature_Walking _Top" || currentAnimation == "Armature_Idle_Top") && canSwing)
         {
