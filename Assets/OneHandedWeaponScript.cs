@@ -22,6 +22,7 @@ public class OneHandedWeaponScript : MonoBehaviour
     private bool canSwing;
 
     public List<GameObject> hitThings;
+    private Transform weaponSwung;
 
     // Start is called before the first frame update
     void Start()
@@ -67,6 +68,24 @@ public class OneHandedWeaponScript : MonoBehaviour
         
 
         previousAnimation = currentAnimation;
+
+
+        if (isSwinging == true)
+        {
+            for (int i = 0; i < weaponSwung.GetComponent<ItemScript>().hitBoxes.amount.Count; i++)
+            {
+                List<float> parameters = weaponSwung.GetComponent<ItemScript>().hitBoxes.amount[i].parameters;
+                Collider[] thingsNowHit = Physics.OverlapBox(weaponSwung.position + new Vector3(parameters[0], parameters[1], parameters[2]), new Vector3(parameters[3], parameters[4], parameters[5]), weaponSwung.rotation);
+                foreach (Collider thing in thingsNowHit)
+                {
+                    if(thing.GetComponent<DamageTaker>() && !hitThings.Contains(thing.gameObject))
+                    {
+                        hitThings.Add(thing.gameObject);
+                        print(thing);
+                    }
+                }
+            }
+        }
     }
 
 
@@ -75,9 +94,27 @@ public class OneHandedWeaponScript : MonoBehaviour
         if(hand == 1)
         {
             handSwinging = rightHand;
+            foreach (Transform child in rightHand.transform)
+            {
+                if (child.GetComponent<ItemScript>().isWeapon == true)
+                {
+                    weaponSwung = child;
+                    break;
+                }
+                weaponSwung = null;
+            }
         } else
         {
             handSwinging = leftHand;
+            foreach (Transform child in leftHand.transform)
+            {
+                if (child.GetComponent<ItemScript>().isWeapon == true)
+                {
+                    weaponSwung = child;
+                    break;
+                }
+                weaponSwung = null;
+            }
         }
 
         isSwinging = true;
