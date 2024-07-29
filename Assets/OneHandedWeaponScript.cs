@@ -54,7 +54,7 @@ public class OneHandedWeaponScript : MonoBehaviour
         {
             canSwing = false;
             GetComponent<Animator>().SetTrigger("Hit");
-        } else if (Input.GetMouseButton(0) && currentAnimation == "Armature_One Handed Swing Right")
+        } else if (Input.GetMouseButton(0) && currentAnimation == "Armature_One Handed Swing Right" && leftHandHasWeapon)
         {
             GetComponent<Animator>().SetBool("Still Hitting", true);
         }
