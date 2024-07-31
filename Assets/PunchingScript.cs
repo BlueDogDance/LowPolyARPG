@@ -16,9 +16,13 @@ public class PunchingScript : MonoBehaviour
     public int damage;
     string previousAnimation;
     string currentAnimation;
+
+
+    private List<GameObject> hitThings;
     // Start is called before the first frame update
     void Start()
     {
+        hitThings = new List<GameObject>();
         currentAnimation = "Armature_Idle_Top";
     }
 
@@ -26,7 +30,7 @@ public class PunchingScript : MonoBehaviour
     void Update()
     {
 
-
+        GetComponent<Animator>().SetInteger("WeaponType", 0);
         GetComponent<Animator>().SetFloat("AttackSpeed", attackSpeed);
         if (Input.GetMouseButton(1))
         {
@@ -107,14 +111,29 @@ public class PunchingScript : MonoBehaviour
         foreach (Collider thing in hitArea)
         {
             //print(thing);
-            if (thing.GetComponent<DamageTaker>())
+            if (thing.GetComponent<DamageTaker>() && !hitThings.Contains(thing.gameObject))
             {
                 thing.GetComponent<DamageTaker>().takeDamage(10);
                 GameObject part = Instantiate(hitParticle, hitPosition, transform.rotation);
                 part.transform.LookAt(transform.position);
                 part.GetComponent<ParticleSystem>().Play();
+                hitThings.Add(thing.gameObject);
+            } else if (thing.GetComponent<Redirector>())
+            {
+                if (thing.GetComponent<Redirector>().Direction.GetComponent<DamageTaker>() && !hitThings.Contains(thing.GetComponent<Redirector>().Direction))
+                {
+                    thing.GetComponent<Redirector>().Direction.GetComponent<DamageTaker>().takeDamage(10);
+                    GameObject part = Instantiate(hitParticle, hitPosition, transform.rotation);
+                    part.transform.LookAt(transform.position);
+                    part.GetComponent<ParticleSystem>().Play();
+                    hitThings.Add(thing.GetComponent<Redirector>().Direction);
+                }
             }
+            
         }
+
+
+        hitThings.Clear();
     }
 
     private void OnDrawGizmosSelected()

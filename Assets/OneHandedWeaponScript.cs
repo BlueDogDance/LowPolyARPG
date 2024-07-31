@@ -14,6 +14,7 @@ public class OneHandedWeaponScript : MonoBehaviour
 
     public Transform leftHand;
     public Transform rightHand;
+    public GameObject hitParticle;
 
 
     private Transform handSwinging;
@@ -80,8 +81,15 @@ public class OneHandedWeaponScript : MonoBehaviour
                 {
                     if(thing.GetComponent<DamageTaker>() && !hitThings.Contains(thing.gameObject))
                     {
+                        hitSomething(thing.ClosestPoint(weaponSwung.position), thing.gameObject);
                         hitThings.Add(thing.gameObject);
-                        print(thing);
+                    } else if(thing.GetComponent<Redirector>() && !hitThings.Contains(thing.GetComponent<Redirector>().Direction))
+                    {
+                        if (thing.GetComponent<Redirector>().Direction.GetComponent<DamageTaker>())
+                        {
+                            hitSomething(thing.ClosestPoint(weaponSwung.position), thing.GetComponent<Redirector>().Direction);
+                            hitThings.Add(thing.GetComponent<Redirector>().Direction);
+                        }
                     }
                 }
             }
@@ -91,6 +99,7 @@ public class OneHandedWeaponScript : MonoBehaviour
 
     public void StartSwinging(int hand)
     {
+        hitThings.Clear();
         if(hand == 1)
         {
             handSwinging = rightHand;
@@ -124,5 +133,13 @@ public class OneHandedWeaponScript : MonoBehaviour
     {
         isSwinging = false;
         hitThings.Clear();
+    }
+
+    void hitSomething(Vector3 hitArea, GameObject thingHit)
+    {
+        thingHit.GetComponent<DamageTaker>().takeDamage(10);
+        GameObject part = Instantiate(hitParticle, hitArea, transform.rotation);
+        part.transform.LookAt(transform.position);
+        part.GetComponent<ParticleSystem>().Play();
     }
 }
