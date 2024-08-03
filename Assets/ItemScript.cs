@@ -17,8 +17,9 @@ public class collisionAreas
 
 public class ItemScript : MonoBehaviour
 {
+    public int itemID;
 
-
+    public bool isOnGround;
     public bool isWeapon;
     public int weaponDamage;
 

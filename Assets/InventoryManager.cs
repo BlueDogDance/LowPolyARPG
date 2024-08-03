@@ -15,7 +15,7 @@ public class InventoryManager : MonoBehaviour
     public GameObject defaultSlot;
     public List<GameObject> inventorySlots;
     public List<GameObject> itemPrefabs;
-    public List<Image> itemUILooks;
+    public List<Sprite> itemUILooks;
     public List<string> itemDescriptions;
 
 
@@ -30,6 +30,12 @@ public class InventoryManager : MonoBehaviour
             inventorySlots.Add(newSlot);
         }
 
+        inventorySlots[0].GetComponent<inventorySlotScript>().item = itemPrefabs[1];
+        inventorySlots[0].GetComponent<inventorySlotScript>().itemTexture = itemUILooks[1];
+        inventorySlots[0].GetComponent<inventorySlotScript>().itemID = 1;
+
+
+        Inventory.SetActive(false);
     }
 
     // Update is called once per frame
