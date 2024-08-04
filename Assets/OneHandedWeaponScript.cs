@@ -4,10 +4,10 @@ using UnityEngine;
 
 public class OneHandedWeaponScript : MonoBehaviour
 {
-    public bool rightHandHasWeapon;
-    public bool leftHandHasWeapon;
-    public bool rightHandHasShield;
-    public bool leftHandHasShield;
+    bool rightHandHasWeapon;
+    bool leftHandHasWeapon;
+    bool rightHandHasShield;
+    bool leftHandHasShield;
 
     public string currentAnimation;
     public string previousAnimation;
@@ -34,61 +34,69 @@ public class OneHandedWeaponScript : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        AnimatorClipInfo[] animatorInfo = GetComponent<Animator>().GetCurrentAnimatorClipInfo(0);
-        currentAnimation = animatorInfo[0].clip.name;
-
-        if((leftHandHasWeapon && rightHandHasWeapon) || rightHandHasWeapon)
+        if (GetComponent<BaseStats>().rightHandHasWeapon || GetComponent<BaseStats>().leftHandHasWeapon)
         {
-            GetComponent<Animator>().SetInteger("WeaponType", 1);
-        }
-        else
-        {
-            GetComponent<Animator>().SetInteger("WeaponType", 2);
-        }
+            leftHandHasWeapon = GetComponent<BaseStats>().leftHandHasWeapon;
+            rightHandHasWeapon = GetComponent<BaseStats>().rightHandHasWeapon;
 
-        if (previousAnimation == "Armature_One Handed Swing Right" || previousAnimation == "Armature_One Handed Swing Left" && currentAnimation != "Armature_One Handed Swing Left" && currentAnimation != "Armature_One Handed Swing Right")
-        {
-            canSwing = true;
-        }
+            AnimatorClipInfo[] animatorInfo = GetComponent<Animator>().GetCurrentAnimatorClipInfo(0);
+            currentAnimation = animatorInfo[0].clip.name;
 
-        if (Input.GetMouseButton(0) && (currentAnimation == "Armature_Walking _Top" || currentAnimation == "Armature_Idle_Top") && canSwing)
-        {
-            canSwing = false;
-            GetComponent<Animator>().SetTrigger("Hit");
-        } else if (Input.GetMouseButton(0) && currentAnimation == "Armature_One Handed Swing Right" && leftHandHasWeapon)
-        {
-            GetComponent<Animator>().SetBool("Still Hitting", true);
-        }
-
-        if(currentAnimation == "Armature_One Handed Swing Left")
-        {
-            GetComponent<Animator>().SetBool("Still Hitting", false);
-        }
-
-        
-        
-
-        previousAnimation = currentAnimation;
-
-
-        if (isSwinging == true)
-        {
-            for (int i = 0; i < weaponSwung.GetComponent<ItemScript>().hitBoxes.amount.Count; i++)
+            if ((leftHandHasWeapon && rightHandHasWeapon) || rightHandHasWeapon)
             {
-                List<float> parameters = weaponSwung.GetComponent<ItemScript>().hitBoxes.amount[i].parameters;
-                Collider[] thingsNowHit = Physics.OverlapBox(weaponSwung.position + new Vector3(parameters[0], parameters[1], parameters[2]), new Vector3(parameters[3], parameters[4], parameters[5]), weaponSwung.rotation);
-                foreach (Collider thing in thingsNowHit)
+                GetComponent<Animator>().SetInteger("WeaponType", 1);
+            }
+            else
+            {
+                GetComponent<Animator>().SetInteger("WeaponType", 2);
+            }
+
+            if (previousAnimation == "Armature_One Handed Swing Right" || previousAnimation == "Armature_One Handed Swing Left" && currentAnimation != "Armature_One Handed Swing Left" && currentAnimation != "Armature_One Handed Swing Right")
+            {
+                canSwing = true;
+            }
+
+            if (Input.GetMouseButton(0) && (currentAnimation == "Armature_Walking _Top" || currentAnimation == "Armature_Idle_Top") && canSwing)
+            {
+                canSwing = false;
+                GetComponent<Animator>().SetTrigger("Hit");
+            }
+            else if (Input.GetMouseButton(0) && currentAnimation == "Armature_One Handed Swing Right" && leftHandHasWeapon)
+            {
+                GetComponent<Animator>().SetBool("Still Hitting", true);
+            }
+
+            if (currentAnimation == "Armature_One Handed Swing Left")
+            {
+                GetComponent<Animator>().SetBool("Still Hitting", false);
+            }
+
+
+
+
+            previousAnimation = currentAnimation;
+
+
+            if (isSwinging == true)
+            {
+                for (int i = 0; i < weaponSwung.GetComponent<ItemScript>().hitBoxes.amount.Count; i++)
                 {
-                    if(thing.GetComponent<DamageTaker>() && !hitThings.Contains(thing.gameObject))
+                    List<float> parameters = weaponSwung.GetComponent<ItemScript>().hitBoxes.amount[i].parameters;
+                    Collider[] thingsNowHit = Physics.OverlapBox(weaponSwung.position + new Vector3(parameters[0], parameters[1], parameters[2]), new Vector3(parameters[3], parameters[4], parameters[5]), weaponSwung.rotation);
+                    foreach (Collider thing in thingsNowHit)
                     {
-                        hitSomething(thing.ClosestPoint(weaponSwung.position), thing.gameObject);
-                        hitThings.Add(thing.gameObject);
-                    } else if(thing.GetComponent<Redirector>() && !hitThings.Contains(thing.GetComponent<Redirector>().Direction))
-                    {
-                        if (thing.GetComponent<Redirector>().Direction.GetComponent<DamageTaker>())
+                        if (thing.GetComponent<DamageTaker>() && !hitThings.Contains(thing.gameObject))
                         {
-                            hitSomething(thing.ClosestPoint(weaponSwung.position), thing.GetComponent<Redirector>().Direction);
-                            hitThings.Add(thing.GetComponent<Redirector>().Direction);
+                            hitSomething(thing.ClosestPoint(weaponSwung.position), thing.gameObject);
+                            hitThings.Add(thing.gameObject);
+                        }
+                        else if (thing.GetComponent<Redirector>() && !hitThings.Contains(thing.GetComponent<Redirector>().Direction))
+                        {
+                            if (thing.GetComponent<Redirector>().Direction.GetComponent<DamageTaker>())
+                            {
+                                hitSomething(thing.ClosestPoint(weaponSwung.position), thing.GetComponent<Redirector>().Direction);
+                                hitThings.Add(thing.GetComponent<Redirector>().Direction);
+                            }
                         }
                     }
                 }
@@ -137,7 +145,7 @@ public class OneHandedWeaponScript : MonoBehaviour
 
     void hitSomething(Vector3 hitArea, GameObject thingHit)
     {
-        thingHit.GetComponent<DamageTaker>().takeDamage(10);
+        thingHit.GetComponent<DamageTaker>().takeDamage(weaponSwung.GetComponent<ItemScript>().weaponDamage);
         GameObject part = Instantiate(hitParticle, hitArea, transform.rotation);
         part.transform.LookAt(transform.position);
         part.GetComponent<ParticleSystem>().Play();

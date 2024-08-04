@@ -29,64 +29,69 @@ public class PunchingScript : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
-        GetComponent<Animator>().SetInteger("WeaponType", 0);
-        GetComponent<Animator>().SetFloat("AttackSpeed", attackSpeed);
-        if (Input.GetMouseButton(1))
+        if (GetComponent<BaseStats>().rightHandHasWeapon == false && GetComponent<BaseStats>().leftHandHasWeapon == false)
         {
-            if (!GetComponent<momementScript>().speedMods.Contains(0.4f))
+            GetComponent<Animator>().SetInteger("WeaponType", 0);
+            GetComponent<Animator>().SetFloat("AttackSpeed", attackSpeed);
+            if (Input.GetMouseButton(1))
             {
-                GetComponent<momementScript>().speedMods.Add(0.4f);
+                if (!GetComponent<momementScript>().speedMods.Contains(0.4f))
+                {
+                    GetComponent<momementScript>().speedMods.Add(0.4f);
+                }
+
+
+
+
+                GetComponent<Animator>().SetBool("IsBlocking", true);
+                is_blocking = true;
+                if (timeLeft == 1)
+                {
+                    GetComponent<Animator>().SetTrigger("StartBlocking");
+                }
+
+                timeLeft = 0;
             }
-
-
-
-
-            GetComponent<Animator>().SetBool("IsBlocking", true);
-            is_blocking = true;
-            if (timeLeft == 1)
+            else
             {
-                GetComponent<Animator>().SetTrigger("StartBlocking");
+                AnimatorClipInfo[] animatorInfo = GetComponent<Animator>().GetCurrentAnimatorClipInfo(0);
+                currentAnimation = animatorInfo[0].clip.name;
+
+
+                if (Input.GetMouseButton(0) && currentAnimation == "Armature_Idle_Top" && firstHitLanded == false)
+                {
+                    GetComponent<Animator>().SetTrigger("Hit");
+                    firstHitLanded = true;
+                }
+                else if (Input.GetMouseButton(0) && currentAnimation == "Armature_Punch1")
+                {
+                    GetComponent<Animator>().SetBool("Still Hitting", true);
+                }
+                else if (Input.GetMouseButton(0) && currentAnimation == "Armature_Walking _Top" && firstHitLanded == false)
+                {
+                    GetComponent<Animator>().SetTrigger("Hit");
+                    firstHitLanded = true;
+                }
+
+                //Check States Here:
+
+                if (currentAnimation != "Armature_Punch1" && previousAnimation == "Armature_Punch1")
+                {
+                    firstHitLanded = false;
+                }
+
+                //print(currentAnimation);
+
+                previousAnimation = currentAnimation;
+
+                if (GetComponent<momementScript>().speedMods.Contains(0.4f))
+                {
+                    GetComponent<momementScript>().speedMods.Remove(0.4f);
+                }
+                GetComponent<Animator>().SetBool("IsBlocking", false);
+                timeLeft = 1;
+
             }
-            
-            timeLeft = 0;
-        } 
-        else 
-        {
-            AnimatorClipInfo[] animatorInfo = GetComponent<Animator>().GetCurrentAnimatorClipInfo(0);
-            currentAnimation = animatorInfo[0].clip.name;
-
-
-            if (Input.GetMouseButton(0) && currentAnimation == "Armature_Idle_Top" && firstHitLanded == false)
-            {
-                GetComponent<Animator>().SetTrigger("Hit");
-                firstHitLanded = true;
-            } else if (Input.GetMouseButton(0) && currentAnimation == "Armature_Punch1")
-            {
-                GetComponent<Animator>().SetBool("Still Hitting", true);
-            } else if (Input.GetMouseButton(0) && currentAnimation == "Armature_Walking _Top" && firstHitLanded == false){
-                GetComponent<Animator>().SetTrigger("Hit");
-                firstHitLanded = true;
-            }
-
-            //Check States Here:
-
-            if (currentAnimation != "Armature_Punch1" && previousAnimation == "Armature_Punch1")
-            {
-                firstHitLanded = false;
-            }
-
-            //print(currentAnimation);
-            
-            previousAnimation = currentAnimation;
-
-            if (GetComponent<momementScript>().speedMods.Contains(0.4f))
-            {
-                GetComponent<momementScript>().speedMods.Remove(0.4f);
-            }
-            GetComponent<Animator>().SetBool("IsBlocking", false);
-            timeLeft = 1;
-
         }
     }
 

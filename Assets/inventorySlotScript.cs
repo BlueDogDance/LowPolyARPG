@@ -9,7 +9,7 @@ public class inventorySlotScript : MonoBehaviour
     public Sprite itemTexture;
     public int itemID;
 
-    private void Update()
+    public void Refresh()
     {
         transform.GetChild(0).GetComponent<Image>().sprite = itemTexture;
     }
