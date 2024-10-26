@@ -9,8 +9,8 @@ public class PunchingScript : MonoBehaviour
      bool is_blocking;
     public float attackSpeed;
     public List<int> DamageBonuses;
-    public Transform handR;
-    public Transform handL;
+    Transform handR;
+    Transform handL;
     public float attackRange;
     public GameObject hitParticle;
     public int damage;
@@ -24,75 +24,76 @@ public class PunchingScript : MonoBehaviour
     {
         hitThings = new List<GameObject>();
         currentAnimation = "Armature_Idle_Top";
+
+        handR = GetComponent<BaseStats>().rightHand;
+        handL = GetComponent<BaseStats>().leftHand;
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (GetComponent<BaseStats>().rightHandHasWeapon == false && GetComponent<BaseStats>().leftHandHasWeapon == false)
+        is_blocking = GetComponent<BaseStats>().isBlocking;
+        GetComponent<Animator>().SetInteger("WeaponType", 0);
+        GetComponent<Animator>().SetFloat("AttackSpeed", attackSpeed);
+        if (is_blocking)
         {
-            GetComponent<Animator>().SetInteger("WeaponType", 0);
-            GetComponent<Animator>().SetFloat("AttackSpeed", attackSpeed);
-            if (Input.GetMouseButton(1))
+            if (!GetComponent<momementScript>().speedMods.Contains(0.4f))
             {
-                if (!GetComponent<momementScript>().speedMods.Contains(0.4f))
-                {
-                    GetComponent<momementScript>().speedMods.Add(0.4f);
-                }
-
-
-
-
-                GetComponent<Animator>().SetBool("IsBlocking", true);
-                is_blocking = true;
-                if (timeLeft == 1)
-                {
-                    GetComponent<Animator>().SetTrigger("StartBlocking");
-                }
-
-                timeLeft = 0;
+                GetComponent<momementScript>().speedMods.Add(0.4f);
             }
-            else
+
+
+
+
+            GetComponent<Animator>().SetBool("IsBlocking", true);
+            if (timeLeft == 1)
             {
-                AnimatorClipInfo[] animatorInfo = GetComponent<Animator>().GetCurrentAnimatorClipInfo(0);
-                currentAnimation = animatorInfo[0].clip.name;
+                GetComponent<Animator>().SetTrigger("StartBlocking");
+            }
+
+            timeLeft = 0;
+        }
+        else
+        {
+            AnimatorClipInfo[] animatorInfo = GetComponent<Animator>().GetCurrentAnimatorClipInfo(0);
+            currentAnimation = animatorInfo[0].clip.name;
 
 
-                if (Input.GetMouseButton(0) && currentAnimation == "Armature_Idle_Top" && firstHitLanded == false)
-                {
-                    GetComponent<Animator>().SetTrigger("Hit");
-                    firstHitLanded = true;
-                }
-                else if (Input.GetMouseButton(0) && currentAnimation == "Armature_Punch1")
-                {
-                    GetComponent<Animator>().SetBool("Still Hitting", true);
-                }
-                else if (Input.GetMouseButton(0) && currentAnimation == "Armature_Walking _Top" && firstHitLanded == false)
-                {
-                    GetComponent<Animator>().SetTrigger("Hit");
-                    firstHitLanded = true;
-                }
+            if (Input.GetMouseButton(0) && currentAnimation == "Armature_Idle_Top" && firstHitLanded == false)
+            {
+                GetComponent<Animator>().SetTrigger("Hit");
+                firstHitLanded = true;
+            }
+            else if (Input.GetMouseButton(0) && currentAnimation == "Armature_Punch1")
+            {
+                GetComponent<Animator>().SetBool("Still Hitting", true);
+            }
+            else if (Input.GetMouseButton(0) && currentAnimation == "Armature_Walking _Top" && firstHitLanded == false)
+            {
+                GetComponent<Animator>().SetTrigger("Hit");
+                firstHitLanded = true;
+            }
 
                 //Check States Here:
 
-                if (currentAnimation != "Armature_Punch1" && previousAnimation == "Armature_Punch1")
-                {
-                    firstHitLanded = false;
-                }
+            if (currentAnimation != "Armature_Punch1" && previousAnimation == "Armature_Punch1")
+            {
+                firstHitLanded = false;
+            }
 
                 //print(currentAnimation);
 
-                previousAnimation = currentAnimation;
+            previousAnimation = currentAnimation;
 
-                if (GetComponent<momementScript>().speedMods.Contains(0.4f))
-                {
-                    GetComponent<momementScript>().speedMods.Remove(0.4f);
-                }
-                GetComponent<Animator>().SetBool("IsBlocking", false);
-                timeLeft = 1;
-
+            if (GetComponent<momementScript>().speedMods.Contains(0.4f))
+            {
+                GetComponent<momementScript>().speedMods.Remove(0.4f);
             }
+            GetComponent<Animator>().SetBool("IsBlocking", false);
+            timeLeft = 1;
+
         }
+        
     }
 
     void Punch(int hand)
@@ -141,8 +142,13 @@ public class PunchingScript : MonoBehaviour
         hitThings.Clear();
     }
 
-    private void OnDrawGizmosSelected()
+    //private void OnDrawGizmosSelected()
+    //{
+    //    Gizmos.DrawWireSphere(handL.position, attackRange);
+    //}
+
+    private void OnEnable()
     {
-        Gizmos.DrawWireSphere(handL.position, attackRange);
+        firstHitLanded = false;
     }
 }

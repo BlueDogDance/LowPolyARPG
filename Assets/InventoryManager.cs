@@ -19,6 +19,10 @@ public class InventoryManager : MonoBehaviour
     public List<Sprite> itemUILooks;
     public List<string> itemDescriptions;
     public GameObject eventSystem;
+    public GameObject cameraSystem;
+
+    public List<Transform> specialSlots;
+    public List<string> itemType;
 
     private bool clickedLastFrame;
     private GameObject selectedSlot;
@@ -38,8 +42,10 @@ public class InventoryManager : MonoBehaviour
         inventorySlots[0].GetComponent<inventorySlotScript>().itemID = 1;
         inventorySlots[0].GetComponent<inventorySlotScript>().Refresh();
 
-
+        Cursor.lockState = CursorLockMode.Locked;
         Inventory.SetActive(false);
+
+
     }
 
     // Update is called once per frame
@@ -51,10 +57,20 @@ public class InventoryManager : MonoBehaviour
             if (inventoryIsActive)
             {
                 Inventory.SetActive(true);
+                player.GetComponent<OneHandedWeaponScript>().enabled = false;
+                player.GetComponent<BaseStats>().enabled = false;
+                player.GetComponent<PunchingScript>().enabled = false;
+                Cursor.lockState = CursorLockMode.None;
+                cameraSystem.gameObject.SetActive(false);
             }
             else
             {
                 Inventory.SetActive(false);
+                player.GetComponent<OneHandedWeaponScript>().enabled = true;
+                player.GetComponent<BaseStats>().enabled = true;
+                player.GetComponent<PunchingScript>().enabled = true;
+                Cursor.lockState = CursorLockMode.Locked;
+                cameraSystem.gameObject.SetActive(true);
             }
         }
 
@@ -77,6 +93,58 @@ public class InventoryManager : MonoBehaviour
             clickedLastFrame = false;
         }
 
+        if (Input.GetKeyDown(KeyCode.Q))
+        {
+            GameObject dropItem = getMouseThing();
+            if(dropItem.GetComponent<inventorySlotScript>().item != null)
+            {
+                GameObject droppedItem = Instantiate(dropItem.GetComponent<inventorySlotScript>().item, player.transform.position + new Vector3(0,1,0), player.transform.rotation);
+                if (droppedItem.GetComponent<BoxCollider>()){
+                    droppedItem.GetComponent<BoxCollider>().enabled = true;
+                }
+                
+                droppedItem.GetComponent<Rigidbody>().isKinematic = false;
+                droppedItem.GetComponent<ItemScript>().isOnGround = true;
+            }
+            dropItem.GetComponent<inventorySlotScript>().item = null;
+            dropItem.GetComponent<inventorySlotScript>().itemTexture = null;
+            dropItem.GetComponent<inventorySlotScript>().itemID = 0;
+            dropItem.GetComponent<inventorySlotScript>().Refresh();
+            RefreshEquipment();
+        }
+
+
+        if (Input.GetKeyDown(KeyCode.F))
+        {
+            Collider[] overlap = Physics.OverlapSphere(player.transform.position, 1);
+            List<GameObject> items = new List<GameObject>();
+            foreach(Collider thing in overlap)
+            {
+                if (thing.GetComponent<ItemScript>())
+                {
+                    if (thing.GetComponent<ItemScript>().isOnGround == true)
+                    {
+                        items.Add(thing.gameObject);
+                    }
+                }
+            }
+            foreach(GameObject item in items)
+            {
+                for (int i = 0; i < inventorySlots.Count; i++)
+                {
+                    if (inventorySlots[i].GetComponent<inventorySlotScript>().item == null)
+                    {
+                        inventorySlots[i].GetComponent<inventorySlotScript>().item = itemPrefabs[item.GetComponent<ItemScript>().itemID];
+                        inventorySlots[i].GetComponent<inventorySlotScript>().itemTexture = itemUILooks[item.GetComponent<ItemScript>().itemID];
+                        inventorySlots[i].GetComponent<inventorySlotScript>().itemID = item.GetComponent<ItemScript>().itemID;
+                        inventorySlots[i].GetComponent<inventorySlotScript>().Refresh();
+                        Destroy(item);
+                        break;
+                    }
+                }
+            }
+            
+        }
     }
 
     void MouseOff()
@@ -84,23 +152,72 @@ public class InventoryManager : MonoBehaviour
         GameObject newSlot = getMouseThing();
         if (newSlot != null)
         {
-            GameObject tempItem = selectedSlot.GetComponent<inventorySlotScript>().item;
-            Sprite tempSprite = selectedSlot.GetComponent<inventorySlotScript>().itemTexture;
-            int tempID = selectedSlot.GetComponent<inventorySlotScript>().itemID;
+            if(specialSlots.Contains(newSlot.transform) || specialSlots.Contains(selectedSlot.transform))
+            {
+                if (specialSlots.Contains(newSlot.transform))
+                {
+                    int specialIndex = specialSlots.IndexOf(newSlot.transform);
+                } else
+                {
+                    int specialIndex = specialSlots.IndexOf(selectedSlot.transform);
+                }
 
-            inventorySlotScript old = selectedSlot.GetComponent<inventorySlotScript>();
-            inventorySlotScript current = newSlot.GetComponent<inventorySlotScript>();
+                bool hasCorrectOld = selectedSlot.GetComponent<inventorySlotScript>().item == null;
+                if (hasCorrectOld == false)
+                {
+                    hasCorrectOld = selectedSlot.GetComponent<inventorySlotScript>().item.GetComponent<ItemScript>().itemType == 1;
+                }
 
-            old.item = current.item;
-            old.itemTexture = current.itemTexture;
-            old.itemID = current.itemID;
+                bool hasCorrectNew = newSlot.GetComponent<inventorySlotScript>().item == null;
+                if (hasCorrectNew == false)
+                {
+                    hasCorrectNew = newSlot.GetComponent<inventorySlotScript>().item.GetComponent<ItemScript>().itemType == 1;
+                }
 
-            current.item = tempItem;
-            current.itemTexture = tempSprite;
-            current.itemID = tempID;
+                if (hasCorrectOld && hasCorrectNew)
+                {
+                    GameObject tempItem = selectedSlot.GetComponent<inventorySlotScript>().item;
+                    Sprite tempSprite = selectedSlot.GetComponent<inventorySlotScript>().itemTexture;
+                    int tempID = selectedSlot.GetComponent<inventorySlotScript>().itemID;
 
-            current.Refresh();
-            old.Refresh();
+                    inventorySlotScript old = selectedSlot.GetComponent<inventorySlotScript>();
+                    inventorySlotScript current = newSlot.GetComponent<inventorySlotScript>();
+
+                    old.item = current.item;
+                    old.itemTexture = current.itemTexture;
+                    old.itemID = current.itemID;
+
+                    current.item = tempItem;
+                    current.itemTexture = tempSprite;
+                    current.itemID = tempID;
+
+                    current.Refresh();
+                    old.Refresh();
+                    RefreshEquipment();
+                }
+                
+            } 
+            else
+            {
+                GameObject tempItem = selectedSlot.GetComponent<inventorySlotScript>().item;
+                Sprite tempSprite = selectedSlot.GetComponent<inventorySlotScript>().itemTexture;
+                int tempID = selectedSlot.GetComponent<inventorySlotScript>().itemID;
+
+                inventorySlotScript old = selectedSlot.GetComponent<inventorySlotScript>();
+                inventorySlotScript current = newSlot.GetComponent<inventorySlotScript>();
+
+                old.item = current.item;
+                old.itemTexture = current.itemTexture;
+                old.itemID = current.itemID;
+
+                current.item = tempItem;
+                current.itemTexture = tempSprite;
+                current.itemID = tempID;
+
+                current.Refresh();
+                old.Refresh();
+            }
+            
         }
     }
 
@@ -127,5 +244,53 @@ public class InventoryManager : MonoBehaviour
         }
 
         return null;
+    }
+
+    public void RefreshEquipment()
+    {
+        foreach(Transform slot in specialSlots)
+        {
+            if(specialSlots.IndexOf(slot) == 0)
+            {
+                if(player.GetComponent<BaseStats>().rightHand.childCount > 0)
+                {
+                    Destroy(player.GetComponent<BaseStats>().rightHand.GetChild(0).gameObject);
+                }
+                if(slot.GetComponent<inventorySlotScript>().item != null)
+                {
+                    GameObject newWeapon = Instantiate(slot.GetComponent<inventorySlotScript>().item);
+                    newWeapon.transform.parent = player.GetComponent<BaseStats>().rightHand;
+                    newWeapon.transform.localPosition = new Vector3(0, 0, 0) + newWeapon.GetComponent<ItemScript>().restingPosition;
+                    newWeapon.transform.localRotation = Quaternion.Euler(new Vector3(0, 0, 0) + newWeapon.GetComponent<ItemScript>().restingRotation);
+
+                    player.GetComponent<BaseStats>().rightHandHasWeapon = true;
+                } else
+                {
+                    player.GetComponent<BaseStats>().rightHandHasWeapon = false;
+                }
+                
+            }
+            if (specialSlots.IndexOf(slot) == 1)
+            {
+                if (player.GetComponent<BaseStats>().leftHand.childCount > 0)
+                {
+                    Destroy(player.GetComponent<BaseStats>().leftHand.GetChild(0).gameObject);
+                }
+                if (slot.GetComponent<inventorySlotScript>().item != null)
+                {
+                    GameObject newWeapon = Instantiate(slot.GetComponent<inventorySlotScript>().item);
+                    newWeapon.transform.parent = player.GetComponent<BaseStats>().leftHand;
+                    newWeapon.transform.localPosition = new Vector3(0, 0, 0) + newWeapon.GetComponent<ItemScript>().restingPosition;
+                    newWeapon.transform.localRotation = Quaternion.Euler(new Vector3(0, 0, 0) + newWeapon.GetComponent<ItemScript>().restingRotation);
+
+                    player.GetComponent<BaseStats>().leftHandHasWeapon = true;
+                }
+                else
+                {
+                    player.GetComponent<BaseStats>().leftHandHasWeapon = false;
+                }
+
+            }
+        }
     }
 }

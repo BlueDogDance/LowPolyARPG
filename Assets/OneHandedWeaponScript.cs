@@ -12,8 +12,8 @@ public class OneHandedWeaponScript : MonoBehaviour
     public string currentAnimation;
     public string previousAnimation;
 
-    public Transform leftHand;
-    public Transform rightHand;
+    Transform leftHand;
+    Transform rightHand;
     public GameObject hitParticle;
 
 
@@ -24,18 +24,26 @@ public class OneHandedWeaponScript : MonoBehaviour
 
     public List<GameObject> hitThings;
     private Transform weaponSwung;
+    float timeLeft;
 
     // Start is called before the first frame update
     void Start()
     {
+        timeLeft = 1;
         canSwing = true;
+
+        leftHand = GetComponent<BaseStats>().leftHand;
+        rightHand = GetComponent<BaseStats>().rightHand;
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (GetComponent<BaseStats>().rightHandHasWeapon || GetComponent<BaseStats>().leftHandHasWeapon)
-        {
+
+
+
+        bool isBlocking = GetComponent<BaseStats>().isBlocking;
+        
             leftHandHasWeapon = GetComponent<BaseStats>().leftHandHasWeapon;
             rightHandHasWeapon = GetComponent<BaseStats>().rightHandHasWeapon;
 
@@ -56,6 +64,33 @@ public class OneHandedWeaponScript : MonoBehaviour
                 canSwing = true;
             }
 
+
+        if(isBlocking == true)
+        {
+            if (!GetComponent<momementScript>().speedMods.Contains(0.4f))
+            {
+                GetComponent<momementScript>().speedMods.Add(0.4f);
+            }
+
+
+
+
+            GetComponent<Animator>().SetBool("IsBlocking", true);
+            if (timeLeft == 1)
+            {
+                GetComponent<Animator>().SetTrigger("StartBlocking");
+            }
+
+            timeLeft = 0;
+        }
+        else 
+        {
+            if (GetComponent<momementScript>().speedMods.Contains(0.4f))
+            {
+                GetComponent<momementScript>().speedMods.Remove(0.4f);
+            }
+            GetComponent<Animator>().SetBool("IsBlocking", false);
+            timeLeft = 1;
             if (Input.GetMouseButton(0) && (currentAnimation == "Armature_Walking _Top" || currentAnimation == "Armature_Idle_Top") && canSwing)
             {
                 canSwing = false;
@@ -113,7 +148,7 @@ public class OneHandedWeaponScript : MonoBehaviour
             handSwinging = rightHand;
             foreach (Transform child in rightHand.transform)
             {
-                if (child.GetComponent<ItemScript>().isWeapon == true)
+                if (child.GetComponent<ItemScript>().itemType == 1)
                 {
                     weaponSwung = child;
                     break;
@@ -125,7 +160,7 @@ public class OneHandedWeaponScript : MonoBehaviour
             handSwinging = leftHand;
             foreach (Transform child in leftHand.transform)
             {
-                if (child.GetComponent<ItemScript>().isWeapon == true)
+                if (child.GetComponent<ItemScript>().itemType == 1)
                 {
                     weaponSwung = child;
                     break;

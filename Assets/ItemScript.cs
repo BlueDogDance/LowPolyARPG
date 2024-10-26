@@ -18,9 +18,10 @@ public class collisionAreas
 public class ItemScript : MonoBehaviour
 {
     public int itemID;
-
+    public int itemType;
     public bool isOnGround;
-    public bool isWeapon;
+    public Vector3 restingPosition;
+    public Vector3 restingRotation;
     public int weaponDamage;
 
     public collisionAreas hitBoxes = new collisionAreas();
